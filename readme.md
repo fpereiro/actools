@@ -22,13 +22,13 @@ What makes ac;tools different to other providers of web services is simplicity. 
 
 ## The services
 
-- [**ac;id**]: identity.
-- [**ac;file**]: files.
-- [**ac;db**]: database.
-- [**ac;log**]: logs.
-- [**ac;beat**]: server dashboards.
-- [**ac;stat**]: statistics.
-- [**ac;bill**]: billing.
+- [**ac;id**](): identity.
+- [**ac;file**](): files.
+- [**ac;db**](): database.
+- [**ac;log**](): logs.
+- [**ac;beat**](): server dashboards.
+- [**ac;stat**](): statistics.
+- [**ac;bill**](): billing.
 
 The first three are the truly core services, because they allow for identities (which is crucial in a service environment, since all actions must have a subject and all resources an owner) and two types of storage: file & database.
 
