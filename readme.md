@@ -20,21 +20,23 @@ The author wishes to thank [Browserstack](https://browserstack.com) for providin
 
 What makes ac;tools different to other providers of web services is simplicity. For a given service, we strive to find the very few features that will get the job done and present them in the clearest possible way. APIs should be short, clear and powerful. UIs should be self-explanatory. The overall complexity should be one or two zeroes less than that of comparable offerings.
 
-## The services
+Everyone loves simplicity but few uphold it, because it is hard, takes time and perhaps makes desirable features harder or impossible. ac;tools chooses simplicity over everything else.
+
+Making the complex simple. Making the complex beautiful.
+
+## The seven services
 
 - [**ac;id**](): identity.
 - [**ac;file**](): files.
 - [**ac;db**](): database.
 - [**ac;log**](): logs.
-- [**ac;beat**](): server dashboards.
 - [**ac;stat**](): statistics.
-- [**ac;bill**](): billing.
-
-The first three are the truly core services, because they allow for identities (which is crucial in a service environment, since all actions must have a subject and all resources an owner) and two types of storage: file & database.
-
-The next four services are internally implemented on top of the three core services.
+- [**ac;ping**](): notifications.
+- [**ac;queue**](): queues.
 
 You can use any service without having to use the others.
+
+There are triggers for notifications on all the services.
 
 ## Why use services instead of rolling your own?
 
@@ -42,10 +44,10 @@ As a general rule, you should only use ac;tools if you really, really like the A
 
 Some explicit reasons:
 
-- A solution to a common problem is already implemented and offered to you.
-- Less API code.
-- Web admins are also provided.
-- Scalability.
+- A simple solution to a common problem is already implemented and offered to you.
+- Mekes scalability easier.
+- Admins are provided.
+- Admins allow powerful querying and graphing on existing data.
 
 A word on scalability: the things that are hard to scale are those with state. If your API is stateless and refers to file & database services, is relatively easy to scale it (just add more servers! Or use a serverless solution instead). ac;tools intend to make this easier by offering you a scalable stateful layer on which your stateless API can rely.
 
@@ -56,6 +58,23 @@ A fixed amount per month, plus linear (and at cost) extra cost for disk & databa
 ## Security
 
 If you find a security vulnerability, please disclose it to us as soon as possible (`info AT altocode.nl`). We'll work on it with the utmost priority.
+
+## Internals (rough draft)
+
+After bootstrap, all manual ssh logins to server are registered; idea is to make them asymptote to 0. Also info accesses that are not typical are also logged. Logs might be public too, though they might have to be expurgated of some info.
+
+Nomadic infrastructure: servers run for n weeks, then are rotated (emptied, resetted, reinstalled and back in the mix).
+
+Services run independently, but require each other.
+
+Requirements:
+- ac;id: none
+- ac;db: ac;id
+- ac;file: ac;id and ac;db
+- ac;log: ac;id, ac;db and ac;file
+- ac;stat: ac;id and ac;db
+- ac;ping: ac;id and ac;db; interacts with all services through hooks
+- ac;queue: ac;id and ac;db
 
 ## License
 
