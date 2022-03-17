@@ -66,7 +66,7 @@ module.exports = {
    aclog: {
       // Your ac;log credentials here. ac;log hasn't been published yet, so you can use an empty object instead.
    },
-   notifications: function (rq, rs, type, sendmail) {
+   notifications: function (log, rs, type, sendmail) {
       // Optional logic for sending notifications for certain logs.
    }
 }

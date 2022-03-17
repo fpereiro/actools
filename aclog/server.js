@@ -304,7 +304,6 @@ var routes = [
          function (s) {
             Redis (s, 'setex', 'csrf:' + s.session, giz.config.expires, s.csrf);
          },
-         [H.log, s.username, {ev: 'auth', type: 'login', ip: rq.origin, userAgent: rq.headers ['user-agent'], timezone: b.timezone}],
          function (s) {
             reply (rs, 200, {csrf: s.csrf}, {'set-cookie': cicek.cookie.write (CONFIG.cookieName, s.session, {httponly: true, samesite: 'Lax', path: '/', expires: new Date (Date.now () + 1000 * 60 * 60 * 24 * 365 * 10)})});
          },
@@ -446,11 +445,11 @@ var routes = [
       if (type (rq.body) !== 'object' || type (rq.body.log) !== 'object') return reply (rs, 400);
       var log = rq.body.log;
       log.username = rq.user.username;
-      log.t        = Date.now ();
+      log.t        = new Date ();
       fs.appendFile (CONFIG.logfile, JSON.stringify (rq.body.log) + '\n', cbreply (rs, true));
 
       // TODO: replace hardcoded notifications
-      secret.notifications (rq, rs, type, sendmail);
+      SECRET.notifications (log, rs, type, sendmail);
    }],
 
    ['post', 'dataout', function (rq, rs) {
@@ -658,11 +657,17 @@ cicek.log = function (message) {
          error:   message [2]
       }
    }
-   else if (message [1] === 'Invalid signature in cookie') notification = {
-      priority: 'important',
-      type: 'invalid signature in cookie',
-      from:    cicek.isMaster ? 'master' : 'worker' + require ('cluster').worker.id,
-      error:   message [2]
+   else if (message [1] === 'Invalid signature in cookie') {
+      return;
+      // TODO: re-add notification once cicek ignores attributes in cookies
+      /*
+      notification = {
+         priority: 'important',
+         type: 'invalid signature in cookie',
+         from:    cicek.isMaster ? 'master' : 'worker' + require ('cluster').worker.id,
+         error:   message [2]
+      }
+      */
    }
    else if (message [1] === 'worker error') notification = {
       priority: 'critical',
@@ -699,7 +704,7 @@ process.on ('uncaughtException', function (error, origin) {
 
 if (cicek.isMaster) redis.exists ('users:' + SECRET.aclog.username, function (error, exists) {
    if (error) return notify (a.creat (), {priority: 'critical', type: 'redis error', error: error});
-   if (exists) return notify (a.creat (), {priority: 'important', type: 'server start'});
+   if (exists) return setTimeout (function () {notify (a.creat (), {priority: 'important', type: 'server start'})}, 1000);
 
    setTimeout (function () {
       hitit.one ({}, {host: 'localhost', port: CONFIG.port, method: 'post', path: '/auth/signup', body: {username: SECRET.aclog.username, password: SECRET.aclog.password, email: SECRET.aclog.email}}, function (error, data) {
