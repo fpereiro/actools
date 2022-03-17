@@ -5,7 +5,7 @@ if [ "$1" == "prod" ] ; then
    fi
    HOST="root@95.216.118.115"
 elif [ "$1" == "dev" ] ; then
-   HOST="root@"
+   HOST="root@136.243.174.166"
 else
    echo "Must specify environment (dev|prod)"
    exit 1

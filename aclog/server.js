@@ -93,16 +93,15 @@ var Redis = function (s, action) {
 var aclog = {
    initialize: function (logProcessingFunction) {
       aclog.send = function (log, CB) {
-         var server = {host: 'altocode.nl', https: true, basepath: '/tools/log'};
          CB = CB || clog;
          var freshCookie;
          var login = function (cb) {
             freshCookie = true;
             hitit.one ({}, {
-               host:   server.host,
-               https:  server.https,
+               host:   SECRET.aclog.host,
+               https:  SECRET.aclog.https,
                method: 'post',
-               path:   server.basepath + '/auth/login',
+               path:   SECRET.aclog.basepath + '/auth/login',
                body: {username: SECRET.aclog.username, password: SECRET.aclog.password, timezone: new Date ().getTimezoneOffset ()}
             }, function (error, data) {
                if (error) return CB (error);
@@ -114,10 +113,10 @@ var aclog = {
          var send = function () {
             if (type (log) !== 'object') return CB ({error: 'Log must be an object but instead is of type ' + type (log), log: log});
             hitit.one ({}, {
-               host:   server.host,
-               https:  server.https,
+               host:   SECRET.aclog.host,
+               https:  SECRET.aclog.https,
                method: 'post',
-               path:   server.basepath + '/data',
+               path:   SECRET.aclog.basepath + '/data',
                headers: {cookie: aclog.cookie},
                body:    {csrf: aclog.csrf, log: logProcessingFunction ? logProcessingFunction (log) : log}
             }, function (error) {
@@ -687,14 +686,6 @@ cicek.cluster ();
 
 var server = cicek.listen ({port: CONFIG.port}, routes);
 
-if (cicek.isMaster) a.seq ([
-   [k, 'git', 'rev-parse', 'HEAD'],
-   function (s) {
-      if (s.error) return notify (a.creat (), {priority: 'critical', type: 'server start', error: s.error});
-      notify (a.creat (), {priority: 'important', type: 'server start', sha: s.last.stdout.slice (0, -1)});
-   }
-]);
-
 process.on ('uncaughtException', function (error, origin) {
    a.seq ([
       [notify, {priority: 'critical', type: 'server error', error: error, stack: error.stack, origin: origin}],
@@ -702,6 +693,22 @@ process.on ('uncaughtException', function (error, origin) {
          process.exit (1);
       }
    ]);
+});
+
+// *** BOOTSTRAP FIRST USER ***
+
+if (cicek.isMaster) redis.exists ('users:' + SECRET.aclog.username, function (error, exists) {
+   if (error) return notify (a.creat (), {priority: 'critical', type: 'redis error', error: error});
+   if (exists) return notify (a.creat (), {priority: 'important', type: 'server start'});
+
+   setTimeout (function () {
+      hitit.one ({}, {host: 'localhost', port: CONFIG.port, method: 'post', path: '/auth/signup', body: {username: SECRET.aclog.username, password: SECRET.aclog.password, email: SECRET.aclog.email}}, function (error, data) {
+         if (error) return notify (a.creat (), {priority: 'critical', type: 'Bootstrap first user error', error: error});
+         notify (a.creat (), {priority: 'important', type: 'Bootstrap first user OK'});
+         notify (a.creat (), {priority: 'important', type: 'server start'});
+      });
+   // Give the server a second to start itself.
+   }, 1000);
 });
 
 // *** REDIS ERROR HANDLER ***
