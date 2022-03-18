@@ -677,7 +677,7 @@ cicek.log = function (message) {
       error:   message [2]
    }
    else notification = {
-      priority: 'important',
+      priority: 'critical',
       type:    'server error',
       subtype: message [1],
       from:    cicek.isMaster ? 'master' : 'worker' + require ('cluster').worker.id,
@@ -692,12 +692,14 @@ cicek.cluster ();
 var server = cicek.listen ({port: CONFIG.port}, routes);
 
 process.on ('uncaughtException', function (error, origin) {
-   a.seq ([
-      [notify, {priority: 'critical', type: 'server error', error: error, stack: error.stack, origin: origin}],
-      function () {
-         process.exit (1);
-      }
-   ]);
+   server.close (function () {
+      a.seq ([
+         [notify, {priority: 'critical', type: 'server error', error: error, stack: error.stack, origin: origin}],
+         function () {
+            process.exit (1);
+         }
+      ]);
+   });
 });
 
 // *** BOOTSTRAP FIRST USER ***
