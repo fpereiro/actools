@@ -22,7 +22,7 @@ var GREETING = function (username) {
 module.exports = {
    port: 1121,
    redisdb: 4,
-   logfile: '/root/files/logs.json',
+   logfile: '/root/files/aclog/logs.json',
    cookieName: 'aclog' + (ENV ? '-' + ENV : ''),
    backupFrequency: 1,
    etemplates: {
