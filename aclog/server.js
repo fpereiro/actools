@@ -159,7 +159,7 @@ var notify = function (s, message) {
 var lastEmailSent = 0;
 
 var sendmail = function (s, o) {
-   if ((Date.now () - lastEmailSent) < 500) return notify (a.creat (), {type: 'mailer error', error: 'Rate limited sendmail after ' + (Date.now () - lastEmailSent) + 'ms', options: o});
+   if ((Date.now () - lastEmailSent) < 500) return notify (a.creat (), {priority: 'critical', type: 'mailer error', error: 'Rate limited sendmail after ' + (Date.now () - lastEmailSent) + 'ms', options: o});
    lastEmailSent = Date.now ();
    o.from1 = o.from1 || SECRET.emailName;
    o.from2 = o.from2 || SECRET.emailAddress;
@@ -171,7 +171,7 @@ var sendmail = function (s, o) {
       html:    lith.g (o.message),
    }, function (error, rs) {
       if (! error) return s.next ();
-      a.stop (s, [notify, {type: 'mailer error', error: error, options: o}]);
+      a.stop (s, [notify, {priority: 'critical', type: 'mailer error', error: error, options: o}]);
    });
 }
 

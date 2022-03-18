@@ -25,6 +25,10 @@ module.exports = {
    logfile: '/root/files/aclog/logs.json',
    cookieName: 'aclog' + (ENV ? '-' + ENV : ''),
    backupFrequency: 1,
+   email: {
+      address: 'info@altocode.nl',
+      name:    'ac;log'
+   },
    etemplates: {
       welcome: {
          subject: 'Welcome to ac;tools!',
@@ -61,13 +65,11 @@ module.exports = {
       secretAccessKey: 'SECRETKEY',
       region:          'REGION'
    },
-   emailAddress: 'EMAIL',
-   emailName:    'NAME',
    aclog: {
       // Your ac;log credentials here. ac;log hasn't been published yet, so you can use an empty object instead.
    },
    notifications: function (log, rs, type, sendmail) {
-      // Optional logic for sending notifications for certain logs.
+      // Optional logic for sending notifications when receiving certain logs.
    }
 }
 */
