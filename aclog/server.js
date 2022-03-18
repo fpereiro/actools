@@ -135,7 +135,7 @@ aclog.initialize (function (log) {
    log = dale.obj (log, function (v, k) {
       var sv = type (v) === 'string' ? v : JSON.stringify (v);
       var length = (sv || '').length;
-      if (length > 5000) v = sv.slice (0, 2500) + ' [' + (length - 5000) + ' CHARACTERS OMITTED ' + '] ' + sv.slice (-2500);
+      if (length > 5000) v = sv.slice (0, 2500) + ' [' + (length - 5000) + ' CHARACTERS OMITTED' + '] ' + sv.slice (-2500);
       return [k, v];
    });
    log.application = 'ac;log';
@@ -161,11 +161,11 @@ var lastEmailSent = 0;
 var sendmail = function (s, o) {
    if ((Date.now () - lastEmailSent) < 500) return notify (a.creat (), {priority: 'critical', type: 'mailer error', error: 'Rate limited sendmail after ' + (Date.now () - lastEmailSent) + 'ms', options: o});
    lastEmailSent = Date.now ();
-   o.from1 = o.from1 || SECRET.emailName;
-   o.from2 = o.from2 || SECRET.emailAddress;
+   o.from1 = o.from1 || CONFIG.email.name;
+   o.from2 = o.from2 || CONFIG.email.address;
    mailer.sendMail ({
-      from:    o.from1 + ' <' + SECRET.emailAddress + '>',
-      to:      o.to1   + ' <' + o.to2 + '>',
+      from:    o.from1 + ' <' + o.from2 + '>',
+      to:      o.to1   + ' <' + o.to2   + '>',
       replyTo: o.from2,
       subject: o.subject,
       html:    lith.g (o.message),
