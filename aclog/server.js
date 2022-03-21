@@ -157,9 +157,14 @@ var notify = function (s, message) {
 // *** SENDMAIL ***
 
 var lastEmailSent = 0;
+var rateLimitRateLimitMessage = 0;
 
 var sendmail = function (s, o) {
-   if ((Date.now () - lastEmailSent) < 500) return notify (a.creat (), {priority: 'critical', type: 'mailer error', error: 'Rate limited sendmail after ' + (Date.now () - lastEmailSent) + 'ms', options: o});
+   if ((Date.now () - lastEmailSent) < 500) {
+      if ((Date.now () - rateLimitRateLimitMessage) < 2000) return;
+      rateLimitRateLimitMessage = Date.now ();
+      return notify (a.creat (), {priority: 'critical', type: 'mailer error', error: 'Rate limited sendmail after ' + (Date.now () - lastEmailSent) + 'ms', options: o});
+   }
    lastEmailSent = Date.now ();
    o.from1 = o.from1 || CONFIG.email.name;
    o.from2 = o.from2 || CONFIG.email.address;
