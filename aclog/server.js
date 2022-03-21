@@ -741,7 +741,7 @@ if (cicek.isMaster && ENV) setInterval (function () {
 
    a.stop ([
       // TODO: encrypt backups
-      [a.make (s3.upload, s3), {Key: Path.basename (CONFIG.logfile) + new Date ().toISOString (), Body: fs.createReadStream (CONFIG.logfile)}],
+      [a.make (s3.upload, s3), {Key: new Date ().toISOString () + '-' + Path.basename (CONFIG.logfile), Body: fs.createReadStream (CONFIG.logfile)}],
    ], function (s, error) {
       notify (s, {priority: 'critical', type: 'ac;log backup error', error: error});
    });
