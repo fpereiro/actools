@@ -27,7 +27,7 @@ module.exports = {
    backupFrequency: 1,
    email: {
       address: 'info@altocode.nl',
-      name:    'ac;log'
+      name:    'aclog'
    },
    etemplates: {
       welcome: {

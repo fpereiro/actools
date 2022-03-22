@@ -156,13 +156,10 @@ var notify = function (s, message) {
 
 // *** SENDMAIL ***
 
+// TODO: implement proper rate limiting
 var lastEmailSent = 0;
-var rateLimitRateLimitMessage = 0;
-
 var sendmail = function (s, o) {
-   if ((Date.now () - lastEmailSent) < 500) {
-      if ((Date.now () - rateLimitRateLimitMessage) < 2000) return;
-      rateLimitRateLimitMessage = Date.now ();
+   if ((Date.now () - lastEmailSent) < 100) {
       return notify (a.creat (), {priority: 'critical', type: 'mailer error', error: 'Rate limited sendmail after ' + (Date.now () - lastEmailSent) + 'ms', options: o});
    }
    lastEmailSent = Date.now ();
@@ -174,9 +171,9 @@ var sendmail = function (s, o) {
       replyTo: o.from2,
       subject: o.subject,
       html:    lith.g (o.message),
-   }, function (error, rs) {
-      if (! error) return s.next ();
-      a.stop (s, [notify, {priority: 'critical', type: 'mailer error', error: error, options: o}]);
+   }, function (error) {
+      if (error) notify (s, {priority: 'critical', type: 'mailer error', error: error, options: o});
+      else       s.next ();
    });
 }
 
