@@ -260,9 +260,7 @@ var routes = [
             })
          ]],
          ['body', [
-            dale.go (['gotoB.min'], function (v) {
-               return ['script', {src: 'assets/' + v + '.js'}];
-            }),
+            ['script', {src: 'assets/gotoB.min.js'}],
             ['script', {src: 'client.js'}]
          ]]
       ]]
@@ -458,12 +456,17 @@ var routes = [
       var b = rq.body;
       if (stop (rs, [
          ['body', b, 'object'],
-         ['keys of body', dale.keys (b), ['filter', 'sort'], 'eachOf', teishi.test.equal],
+         ['keys of body', dale.keys (b), ['filter', 'sort', 'limit'], 'eachOf', teishi.test.equal],
          function () {return [
             ['body.filter', b.filter, 'array', 'oneOf'],
             ['body.sort',   b.sort,   ['object', 'array', 'undefined'], 'oneOf'],
+            ['body.limit',  b.limit,  'integer'],
+            ['body.limit',  b.limit, {min: 1}, teishi.test.range]
          ]},
       ])) return;
+
+      if (! b.sort) b.sort = {field: 't', reverse: true};
+
       var filter = function (line) {
          if (b.filter.length === 0) return true;
          if (type (b.filter [0]) === 'string') b.filter = [b.filter];
@@ -493,9 +496,11 @@ var routes = [
          if (filter (line)) output.push (line);
       });
       lines.on ('close', function () {
-         if (! b.sort) output.sort (function (a, b) {
-            return b.t - a.t;
-         });
+
+         output = output.sort (function (l1, l2) {
+            return (l1 [b.sort.field] > l2 [b.sort.field] ? 1 : -1) * (b.sort.reverse ? -1 : 1);
+         }).slice (0, b.limit);
+
          reply (rs, 200, output);
       });
    }],
