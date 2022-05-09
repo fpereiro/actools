@@ -34,12 +34,7 @@ redmin.redis = redis;
 
 var mailer = require ('nodemailer').createTransport (require ('nodemailer-ses-transport') (SECRET.ses));
 
-var type = teishi.type, clog = console.log, eq = teishi.eq, inc = function (a, v) {return a.indexOf (v) > -1}, reply = function () {
-   cicek.reply.apply (null, dale.fil (arguments, undefined, function (v, k) {
-      // We ignore the astack stack if it's there. Note that this means that reply will also interrupt the asynchronous sequences. This is on purpose, since replying is usually the last thing to be done.
-      if (! (k === 0 && v && v.path && v.last && v.vars)) return v;
-   }));
-}, stop = function (rs, rules) {
+var type = teishi.type, clog = console.log, eq = teishi.eq, inc = function (a, v) {return a.indexOf (v) > -1}, reply = cicek.reply, stop = function (rs, rules) {
    return teishi.stop (rules, function (error) {
       reply (rs, 400, {error: error});
    }, true);
@@ -665,8 +660,8 @@ cicek.log = function (message) {
       }
    }
    else if (message [1] === 'Invalid signature in cookie') {
-      return;
       // TODO: re-add notification once cicek ignores attributes in cookies
+      return;
       /*
       notification = {
          priority: 'important',
@@ -675,6 +670,13 @@ cicek.log = function (message) {
          error:   message [2]
       }
       */
+   }
+   else if (message [1] === 'cicek.reply validation error' && message [2].match ('response.connection.writable passed to cicek.reply should be equal to true but instead is false')) notification = {
+      priority: 'normal',
+      type:    'client error',
+      subtype: message [1],
+      from:    cicek.isMaster ? 'master' : 'worker' + require ('cluster').worker.id,
+      error:   message [2]
    }
    else if (message [1] === 'worker error') notification = {
       priority: 'critical',
