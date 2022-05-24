@@ -729,14 +729,15 @@ cicek.cluster ();
 var server = cicek.listen ({port: CONFIG.port}, routes);
 
 process.on ('uncaughtException', function (error, origin) {
-   server.close (function () {
-      a.seq ([
-         [notify, {priority: 'critical', type: 'server error', error: error, stack: error.stack, origin: origin}],
-         function () {
+   a.seq ([
+      [notify, {priority: 'critical', type: 'server error', error: error, stack: error.stack, origin: origin}],
+      function (s) {
+         if (! server) process.exit (1);
+         else server.close (function () {
             process.exit (1);
-         }
-      ]);
-   });
+         });
+      }
+   ]);
 });
 
 // *** BOOTSTRAP FIRST USER ***
