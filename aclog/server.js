@@ -151,24 +151,52 @@ var notify = function (s, message) {
 
 // *** SENDMAIL ***
 
-// TODO: implement proper rate limiting
-var lastEmailSent = 0;
-var sendmail = function (s, o) {
-   if ((Date.now () - lastEmailSent) < 100) {
-      return notify (a.creat (), {priority: 'critical', type: 'mailer error', error: 'Rate limited sendmail after ' + (Date.now () - lastEmailSent) + 'ms', options: o});
-   }
-   lastEmailSent = Date.now ();
-   o.from1 = o.from1 || CONFIG.email.name;
-   o.from2 = o.from2 || CONFIG.email.address;
-   mailer.sendMail ({
-      from:    o.from1 + ' <' + o.from2 + '>',
-      to:      o.to1   + ' <' + o.to2   + '>',
-      replyTo: o.from2,
-      subject: o.subject,
-      html:    lith.g (o.message),
-   }, function (error) {
-      if (error) notify (s, {priority: 'critical', type: 'mailer error', error: error, options: o});
-      else       s.next ();
+var rateLimiter = function (s, user) {
+   var nowSecond = Math.floor (Date.now () / 1000);
+   var nowMinute = Math.floor (nowSecond / 60);
+   var multi = redis.multi ();
+   multi.incr   ('rateLimitSecond:' + user + ':' + nowSecond);
+   multi.incr   ('rateLimitMinute:' + user + ':' + nowMinute);
+   multi.expire ('rateLimitSecond:' + user + ':' + nowSecond, 1);
+   multi.expire ('rateLimitMinute:' + user + ':' + nowMinute, 61);
+   multi.exists ('rateLimitWarning:' + user);
+   a.seq (s, [
+      [mexec, multi],
+      function (s) {
+         // Allow up to 5 events per second and 20 per minute
+         if (s.last [0] <= 5 && s.last [1] <= 20)  return s.next ({rateLimited: false});
+         a.seq (s, [
+            // State that a warning will be sent to the user, this warning covers rate limited emails for 5 minutes
+            s.last [4] ? [] : [Redis, 'setex', 'rateLimitWarning:' + user, 60 * 5, 1],
+            function (s) {
+               s.next ({rateLimited: true, warned: !! s.last [4]});
+            }
+         ]);
+      }
+   ]);
+}
+
+var sendmail = function (s, o, username) {
+   a.stop (s, [
+      ! username ? [] : [rateLimiter, username],
+      function (s) {
+         if (username && s.last.rateLimited === true && s.last.warned === true) return s.next ();
+         if (username && s.last.rateLimited === true && s.last.warned === false) o.message = ['pre', JSON.stringify ({error: 'Your account generated too many emails so we will not email you notifications for the next five minutes', t: new Date ()}, null, '   ')];
+         o.from1 = o.from1 || CONFIG.email.name;
+         o.from2 = o.from2 || CONFIG.email.address;
+         mailer.sendMail ({
+            from:    o.from1 + ' <' + o.from2 + '>',
+            to:      o.to1   + ' <' + o.to2   + '>',
+            replyTo: o.from2,
+            subject: o.subject,
+            html:    lith.g (o.message),
+         }, function (error) {
+            if (error) notify (s, {priority: 'critical', type: 'mailer error', error: error, options: o});
+            else s.next ();
+         });
+      }
+   ], function (s, error) {
+      notify (s, {priority: 'critical', type: 'sendmail error', error: error});
    });
 }
 
