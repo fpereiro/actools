@@ -149,6 +149,22 @@ var notify = function (s, message) {
    });
 }
 
+// *** ON UNCAUGHT EXCEPTION, REPORT AND CLOSE SERVER ***
+
+var server;
+
+process.on ('uncaughtException', function (error, origin) {
+   a.seq ([
+      [notify, {priority: 'critical', type: 'server error', error: error, stack: error.stack, origin: origin}],
+      function (s) {
+         if (! server) process.exit (1);
+         else server.destroy (function () {
+            process.exit (1);
+         });
+      }
+   ]);
+});
+
 // *** SENDMAIL ***
 
 var rateLimiter = function (s, user) {
@@ -726,7 +742,7 @@ cicek.log = function (message) {
 
 cicek.cluster ();
 
-var server = cicek.listen ({port: CONFIG.port}, routes);
+server = cicek.listen ({port: CONFIG.port}, routes);
 
 process.on ('uncaughtException', function (error, origin) {
    a.seq ([
