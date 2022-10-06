@@ -683,8 +683,13 @@ cicek.apres = function (rs) {
    }
 
    if (rs.log.code >= 400) {
-      var report = ! inc (['favicon.ico', '/csrf'], rs.log.url);
-      if (report) notify (a.creat (), {priority: rs.log.code >= 500 ? 'critical' : 'important', type: 'response error', code: rs.log.code, method: rs.log.method, url: rs.log.url, ip: rs.log.origin, userAgent: rs.log.requestHeaders ['user-agent'], headers: rs.log.requestHeaders, body: rs.log.requestBody, data: rs.log.data, user: rs.request.user ? rs.request.user.username : null, rbody: teishi.parse (rs.log.responseBody) || rs.log.responseBody});
+      var ignore = dale.stop ([
+         ['/auth/csrf',   403],
+         ['/favicon.ico', 403]
+      ], true, function (toIgnore) {
+         return rs.log.url === toIgnore [0] && rs.log.code === toIgnore [1];
+      });
+      if (! ignore) notify (a.creat (), {priority: rs.log.code >= 500 ? 'critical' : 'important', type: 'response error', code: rs.log.code, method: rs.log.method, url: rs.log.url, ip: rs.log.origin, userAgent: rs.log.requestHeaders ['user-agent'], headers: rs.log.requestHeaders, body: rs.log.requestBody, data: rs.log.data, user: rs.request.user ? rs.request.user.username : null, rbody: teishi.parse (rs.log.responseBody) || rs.log.responseBody});
    }
 
    cicek.Apres (rs);
@@ -715,7 +720,7 @@ cicek.log = function (message) {
       }
       */
    }
-   else if (message [1] === 'cicek.reply validation error' && message [2].match (/response.connection.writable passed to cicek.(reply|file) should be equal to true but instead is false/)) notification = {
+   else if (message [1].match (/cicek\.(reply|file) validation error/) && message [2].match (/response.connection.writable passed to cicek.(reply|file) should be equal to true but instead is false/)) notification = {
       priority: 'normal',
       type:    'client error',
       subtype: message [1],
