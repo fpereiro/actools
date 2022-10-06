@@ -25,14 +25,7 @@ if [ "$2" == "server" ] ; then
    exit 0
 fi
 
-if [ "$2" == "fast" ] ; then
-   cd .. && tar --exclude="$FOLDER/arch" --exclude="$FOLDER/*.swp" --exclude="$FOLDER/node_modules" --exclude="$FOLDER/.git" --exclude="$FOLDER/test" -czvf $TAR $FOLDER
-else
-   cd .. && tar --exclude="$FOLDER/arch" --exclude="$FOLDER/*.swp" --exclude="$FOLDER/node_modules" -czvf $TAR $FOLDER
-fi
-scp $TAR $HOST:
-ssh $HOST tar xzvf $TAR
+rsync -av . $HOST:$FOLDER
+ssh $HOST chown -R root /root/$FOLDER
 echo "main = node server $1" | ssh $HOST "cat >> $FOLDER/mongroup.conf"
-ssh $HOST "cd $FOLDER && npm i --no-save && mg restart"
-ssh $HOST rm $TAR
-rm $TAR
+ssh $HOST "cd $FOLDER && npm i --no-save --omit=dev && mg restart"
