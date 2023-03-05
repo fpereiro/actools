@@ -436,6 +436,12 @@ Add soft deletion operation.
 
 Set up security in S3 so that even with the credentials of a node, files cannot be deleted or overwritten. However, this would preclude economic append operations, because each of these would create a replica! Append requires modification of existing assets, and modification of existing assets can be tantamount to deletion. So there's no sense in adding this level of security. But what safeguards could we have in case of server compromise? Perhaps a daily backup to another S3 bucket, done from other credentials or S3 itself, to limit the damage.
 
+Every file is assumed to be chunked. A non chunked file simply has one chunk. Chunks are stored as FILEID:TIMESTAMP:CHUNKID (chunk id can be smaller in bytes than a uuid, but we should still check for uniqueness). S3 simply maps that.
+
+Challenges:
+- Thousands of log entries per second appended on the same file, then tailing them quickly to gather log info.
+- Redis rdb/aof backups in a production setting.
+
 ### ak;log
 
 Core query mechanism: stream files from ak;file from the end and apply transforms to them.
